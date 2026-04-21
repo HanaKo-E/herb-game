@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>中藥辨識挑戰</title>
+    <style>
+        body {
+            font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
+            background-color: #E8F5E9;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            user-select: none;
+        }
+        header {
+            background-color: #2F4F4F;
+            color: #FFFFFF;
+            width: 100%;
+            padding: 15px 0;
+            text-align: center;
+            font-size: 1.3rem;
+            letter-spacing: 1px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .score-box { margin: 10px; font-weight: bold; color: #2F4F4F; font-size: 1.1rem; text-align: center; }
+        .image-container {
+            width: 85%;
+            max-width: 350px;
+            height: 220px;
+            background-color: #fff;
+            margin: 10px 0;
+            border-radius: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 3px solid #2F4F4F;
+            box-sizing: border-box;
+        }
+        .image-container img { 
+            width: 100%; height: 100%; object-fit: contain; padding: 10px; box-sizing: border-box;
+        }
+        .question {
+            font-size: 1.2rem;
+            margin: 5px 20px 10px;
+            text-align: center;
+            color: #1B5E20;
+            font-weight: bold;
+            min-height: 3.5em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            width: 90%;
+            max-width: 400px;
+        }
+        button {
+            background-color: #2F4F4F;
+            color: white;
+            border: none;
+            padding: 18px 5px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: bold;
+            box-shadow: 0 4px #1a2e2e;
+            transition: all 0.1s;
+            cursor: pointer;
+        }
+        button:active { transform: translateY(2px); box-shadow: 0 2px #1a2e2e; }
+        #feedback {
+            margin-top: 15px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            min-height: 1.2em;
+            text-align: center;
+            width: 90%;
+        }
+        .msg-correct { color: #0000FF; }
+        .msg-wrong { color: #FF0000; }
+    </style>
+</head>
+<body>
+
+<header>中藥辨識挑戰</header>
+<div class="score-box" id="infoDisplay">載入中...</div>
+
+<div class="image-container" id="imgBox">
+    <img id="medImage" src="" alt="圖片載入中...">
+</div>
+
+<div class="question" id="questionText">準備開始挑戰 177 題...</div>
+<div class="options-grid" id="optionsGrid"></div>
+<div id="feedback"></div>
+
+<script>
+    const medicines = [
+        { name: '土茯苓', property: '平', toxicity: '無毒', img: '土茯苓.png' },
+        { name: '大黃', property: '寒', toxicity: '無毒', img: '大黃.png' },
+        { name: '山楂', property: '微溫', toxicity: '無毒', img: '山楂.png' },
+        { name: '升麻', property: '微寒', toxicity: '無毒', img: '升麻.png' },
+        { name: '天花粉', property: '微寒', toxicity: '無毒', img: '天花粉.png' },
+        { name: '巴戟天', property: '微溫', toxicity: '無毒', img: '巴戟天.png' },
+        { name: '木瓜', property: '溫', toxicity: '無毒', img: '木瓜.png' },
+        { name: '木賊', property: '平', toxicity: '無毒', img: '木賊.png' },
+        { name: '牛蒡子', property: '寒', toxicity: '無毒', img: '牛蒡子.png' },
+        { name: '玄參', property: '微寒', toxicity: '無毒', img: '玄參.png' },
+        { name: '生薑', property: '溫', toxicity: '無毒', img: '生薑.png' },
+        { name: '白芷', property: '溫', toxicity: '無毒', img: '白芷.png' },
+        { name: '石斛', property: '微寒', toxicity: '無毒', img: '石斛.png' },
+        { name: '石膏', property: '大寒', toxicity: '無毒', img: '石膏.png' },
+        { name: '百合', property: '微寒', toxicity: '無毒', img: '百合.png' },
+        { name: '西洋參', property: '涼', toxicity: '無毒', img: '西洋參.png' },
+        { name: '決明子', property: '微寒', toxicity: '無毒', img: '決明子.png' },
+        { name: '芒硝', property: '寒', toxicity: '無毒', img: '芒硝.png' },
+        { name: '辛夷', property: '溫', toxicity: '無毒', img: '辛夷.png' },
+        { name: '防風', property: '微溫', toxicity: '無毒', img: '防風.png' },
+        { name: '昆布', property: '寒', toxicity: '無毒', img: '昆布.png' },
+        { name: '板藍根', property: '寒', toxicity: '無毒', img: '板藍根.png' },
+        { name: '知母', property: '寒', toxicity: '無毒', img: '知母.png' },
+        { name: '羌活', property: '溫', toxicity: '無毒', img: '羌活.png' },
+        { name: '金銀花', property: '寒', toxicity: '無毒', img: '金銀花.png' },
+        { name: '威靈仙', property: '溫', toxicity: '無毒', img: '威靈仙.png' },
+        { name: '香薷', property: '微溫', toxicity: '無毒', img: '香薷.png' },
+        { name: '射干', property: '寒', toxicity: '無毒', img: '射干.png' },
+        { name: '柴胡', property: '微寒', toxicity: '無毒', img: '柴胡.png' },
+        { name: '桂枝', property: '溫', toxicity: '無毒', img: '桂枝.png' },
+        { name: '桑枝', property: '平', toxicity: '無毒', img: '桑枝.png' },
+        { name: '桑葉', property: '寒', toxicity: '無毒', img: '桑葉.png' },
+        { name: '浮萍', property: '寒', toxicity: '無毒', img: '浮萍.png' },
+        { name: '烏梢蛇', property: '平', toxicity: '無毒', img: '烏梢蛇.png' },
+        { name: '秦艽', property: '平', toxicity: '無毒', img: '秦艽.png' },
+        { name: '細辛', property: '溫', toxicity: '小毒', img: '細辛.png' },
+        { name: '連翹', property: '微寒', toxicity: '無毒', img: '連翹.png' },
+        { name: '鹿茸', property: '溫', toxicity: '無毒', img: '鹿茸.png' },
+        { name: '麻黃', property: '溫', toxicity: '無毒', img: '麻黃.png' },
+        { name: '紫蘇葉', property: '溫', toxicity: '無毒', img: '紫蘇葉.png' },
+        { name: '絡石藤', property: '微寒', toxicity: '無毒', img: '絡石藤.png' },
+        { name: '菊花', property: '微寒', toxicity: '無毒', img: '菊花.png' },
+        { name: '黃柏', property: '寒', toxicity: '無毒', img: '黃柏.png' },
+        { name: '黃連', property: '寒', toxicity: '無毒', img: '黃連.png' },
+        { name: '當歸', property: '溫', toxicity: '無毒', img: '當歸.png' },
+        { name: '葛根', property: '涼', toxicity: '無毒', img: '葛根.png' },
+        { name: '路路通', property: '平', toxicity: '無毒', img: '路路通.png' },
+        { name: '雷公藤', property: '寒', toxicity: '大毒', img: '雷公藤.png' },
+        { name: '漢防己', property: '寒', toxicity: '無毒', img: '漢防己.png' },
+        { name: '蒼耳子', property: '溫', toxicity: '小毒', img: '蒼耳子.png' },
+        { name: '獨活', property: '微溫', toxicity: '無毒', img: '獨活.png' },
+        { name: '龍膽', property: '寒', toxicity: '無毒', img: '龍膽.png' },
+        { name: '薄荷', property: '涼', toxicity: '無毒', img: '薄荷.png' },
+        { name: '藁本', property: '溫', toxicity: '無毒', img: '藁本.png' },
+        { name: '蟬蛻', property: '寒', toxicity: '無毒', img: '蟬蛻.png' },
+        { name: '黃芩', property: '寒', toxicity: '無毒', img: '黃芩.png' },
+        { name: '蔓荊子', property: '微寒', toxicity: '無毒', img: '蔓荊子.png' },
+        { name: '蔥白', property: '溫', toxicity: '無毒', img: '蔥白.png' },
+        { name: '荊芥', property: '微溫', toxicity: '無毒', img: '荊芥.png' }
+    ];
+
+    let quizList = [];
+    let currentIndex = 0;
+    let score = 0;
+    let isWaiting = false;
+    let currentCorrectAns = "";
+
+    // 1. 生成 177 題 (59 * 3)
+    function initQuiz() {
+        quizList = [];
+        medicines.forEach((med, idx) => {
+            quizList.push({ medIdx: idx, type: 'name', label: '藥名' });
+            quizList.push({ medIdx: idx, type: 'property', label: '寒熱屬性' });
+            quizList.push({ medIdx: idx, type: 'toxicity', label: '毒性' });
+        });
+        
+        // 隨機洗牌題目順序
+        for (let i = quizList.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [quizList[i], quizList[j]] = [quizList[j], quizList[i]];
+        }
+        
+        currentIndex = 0;
+        score = 0;
+    }
+
+    function nextQuestion() {
+        if (currentIndex >= quizList.length) {
+            alert(`恭喜！你已完成全量挑戰 (177題)！\n總分：${score}\n點擊確定重新開始。`);
+            initQuiz();
+        }
+
+        isWaiting = false;
+        document.getElementById('feedback').innerText = "";
+        
+        const currentQuiz = quizList[currentIndex];
+        const med = medicines[currentQuiz.medIdx];
+        currentCorrectAns = med[currentQuiz.type];
+
+        document.getElementById('infoDisplay').innerText = `進度：${currentIndex + 1} / ${quizList.length} | 得分：${score}`;
+        document.getElementById('questionText').innerText = `請問這味藥的「${currentQuiz.label}」是？`;
+        
+        const imgEl = document.getElementById('medImage');
+        imgEl.src = encodeURIComponent(med.img);
+        
+        // 生成選項
+        let allPossible = Array.from(new Set(medicines.map(m => m[currentQuiz.type])));
+        let opts = [currentCorrectAns];
+        
+        // 過濾掉重複的答案並洗牌
+        let others = allPossible.filter(a => a !== currentCorrectAns).sort(() => Math.random() - 0.5);
+        
+        for (let i = 0; i < others.length && opts.length < 4; i++) {
+            opts.push(others[i]);
+        }
+        
+        // 萬一選項不足4個，補位 (通常不會發生，因為中藥屬性多樣)
+        while (opts.length < 4) { opts.push("--"); }
+        
+        opts.sort(() => Math.random() - 0.5);
+
+        const grid = document.getElementById('optionsGrid');
+        grid.innerHTML = "";
+        opts.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.innerText = opt;
+            btn.onclick = () => check(opt);
+            grid.appendChild(btn);
+        });
+    }
+
+    function check(selected) {
+        if (isWaiting) return;
+        isWaiting = true;
+        const fb = document.getElementById('feedback');
+        
+        if (selected === currentCorrectAns) {
+            score += 10;
+            fb.innerText = "答對了！";
+            fb.className = "msg-correct";
+        } else {
+            fb.innerText = "答錯了！正確答案是：" + currentCorrectAns;
+            fb.className = "msg-wrong";
+        }
+        
+        currentIndex++;
+        setTimeout(nextQuestion, 1200);
+    }
+
+    // 啟動
+    initQuiz();
+    nextQuestion();
+</script>
+</body>
+</html>
