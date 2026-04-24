@@ -3,7 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>中藥辨識小遊戲</title>
+    <title>中藥辨識全量挑戰</title>
+    
+    <link rel="icon" href="icon.png" type="image/png">
+    <link rel="apple-touch-icon" href="icon.png">
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
     <style>
         body {
             font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
@@ -13,6 +20,7 @@
             flex-direction: column;
             align-items: center;
             user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
         header {
             background-color: #2F4F4F;
@@ -24,7 +32,16 @@
             letter-spacing: 1px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
-        .score-box { margin: 10px; font-weight: bold; color: #2F4F4F; font-size: 1.1rem; text-align: center; }
+        .score-box { 
+            margin: 10px; 
+            font-weight: bold; 
+            color: #2F4F4F; 
+            font-size: 1rem; 
+            background: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
         .image-container {
             width: 85%;
             max-width: 350px;
@@ -37,6 +54,7 @@
             align-items: center;
             border: 3px solid #2F4F4F;
             box-sizing: border-box;
+            overflow: hidden;
         }
         .image-container img { 
             width: 100%; height: 100%; object-fit: contain; padding: 10px; box-sizing: border-box;
@@ -65,18 +83,19 @@
             border: none;
             padding: 18px 5px;
             border-radius: 12px;
-            font-size: 1rem;
+            font-size: 1.1rem;
             font-weight: bold;
             box-shadow: 0 4px #1a2e2e;
             transition: all 0.1s;
             cursor: pointer;
+            outline: none;
         }
         button:active { transform: translateY(2px); box-shadow: 0 2px #1a2e2e; }
         #feedback {
             margin-top: 15px;
             font-size: 1.2rem;
             font-weight: bold;
-            min-height: 1.2em;
+            min-height: 1.5em;
             text-align: center;
             width: 90%;
         }
@@ -86,7 +105,7 @@
 </head>
 <body>
 
-<header>中藥辨識小遊戲</header>
+<header>中藥辨識全量挑戰</header>
 <div class="score-box" id="infoDisplay">載入中...</div>
 
 <div class="image-container" id="imgBox">
@@ -166,7 +185,6 @@
     let isWaiting = false;
     let currentCorrectAns = "";
 
-    // 1. 生成 177 題 (59 * 3)
     function initQuiz() {
         quizList = [];
         medicines.forEach((med, idx) => {
@@ -175,7 +193,7 @@
             quizList.push({ medIdx: idx, type: 'toxicity', label: '毒性' });
         });
         
-        // 隨機洗牌題目順序
+        // 洗牌
         for (let i = quizList.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [quizList[i], quizList[j]] = [quizList[j], quizList[i]];
@@ -187,7 +205,7 @@
 
     function nextQuestion() {
         if (currentIndex >= quizList.length) {
-            alert(`恭喜！你已完成全量挑戰 (177題)！\n總分：${score}\n點擊確定重新開始。`);
+            alert(`恭喜！你已完成 177 題大挑戰！\n總分：${score}\n點擊確定重新開始。`);
             initQuiz();
         }
 
@@ -201,23 +219,19 @@
         document.getElementById('infoDisplay').innerText = `進度：${currentIndex + 1} / ${quizList.length} | 得分：${score}`;
         document.getElementById('questionText').innerText = `請問這味藥的「${currentQuiz.label}」是？`;
         
+        // 先顯示圖片加載中，避免舊圖閃現
         const imgEl = document.getElementById('medImage');
         imgEl.src = encodeURIComponent(med.img);
         
         // 生成選項
         let allPossible = Array.from(new Set(medicines.map(m => m[currentQuiz.type])));
         let opts = [currentCorrectAns];
-        
-        // 過濾掉重複的答案並洗牌
         let others = allPossible.filter(a => a !== currentCorrectAns).sort(() => Math.random() - 0.5);
         
         for (let i = 0; i < others.length && opts.length < 4; i++) {
             opts.push(others[i]);
         }
-        
-        // 萬一選項不足4個，補位 (通常不會發生，因為中藥屬性多樣)
         while (opts.length < 4) { opts.push("--"); }
-        
         opts.sort(() => Math.random() - 0.5);
 
         const grid = document.getElementById('optionsGrid');
@@ -248,7 +262,6 @@
         setTimeout(nextQuestion, 1200);
     }
 
-    // 啟動
     initQuiz();
     nextQuestion();
 </script>
