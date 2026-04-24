@@ -1,6 +1,6 @@
 {
-  "name": "我的小幫手",
-  "short_name": "我的小幫手",
+  "name": "中藥辨識小遊戲",
+  "short_name": "中藥小遊戲",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#f1f8e9",
